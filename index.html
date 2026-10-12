@@ -1,5 +1,4 @@
-<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
-<title>Bedroom Mebel</title>
+<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Bedroom Mebel</title>
 <meta name="description" content="Bedroom Mebel — yotoqxona mebellari. 3D xonada ko‘ring, rang va o‘lchamni tanlang, buyurtma bering.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -666,7 +665,7 @@ const BRAND = {
   botToken: '8729439935:AAGSF3FS8R4SR0a_i4ioqX-WM3K4CfUG3C8',
   /* chat IDs for @Isroilov16, @Shaxriyor723, @shavkatovv_sh go below, comma-separated */
   chatId: '8149887672,1388062014,1977082720',
-  relay: 'https://isroilovmuhammadjon.github.io/bedroom-mebel/yuborish.html',
+  relay: 'https://isroilovmuhammadjon.github.io/bedroom-mebel/b/',
   instagram: 'bedroom_mebel'
 };
 
@@ -1856,7 +1855,7 @@ function renderOrder(){
   $('oSend').onclick=go;f.onsubmit=e=>{e.preventDefault();$('oSend').click();};
 }
 function gToast(m){let el=document.getElementById('gToast');if(!el){el=document.createElement('div');el.id='gToast';document.body.append(el);}el.textContent=m;el.classList.add('on');clearTimeout(gToast.t);gToast.t=setTimeout(()=>el.classList.remove('on'),3200);}
-const relayURL=text=>BRAND.relay+'?'+new URLSearchParams({l:LANG,m:text.slice(0,3500)}).toString();
+const relayURL=text=>{const b=new TextEncoder().encode(text.slice(0,1800));let s='';b.forEach(c=>s+=String.fromCharCode(c));return BRAND.relay+LANG+'/'+btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');};
 function orderDone(a){const box=a.closest('form')||a.parentElement;if(!box)return;box.querySelectorAll(':scope > *').forEach(el=>el.hidden=true);let ok=box.querySelector('.okbox');if(!ok){ok=document.createElement('div');ok.className='okbox';box.append(ok);}ok.hidden=false;ok.innerHTML=`<div class="okmark">✓</div><h3>${esc(t('order_sent_h'))}</h3><p>${esc(t('order_sent_long'))}</p>`;ok.scrollIntoView({block:'center',behavior:reduce?'auto':'smooth'});}
 function tgSend(a,text,e){
   const link='https://t.me/'+BRAND.orders+'?text='+encodeURIComponent(text.slice(0,3500));
@@ -2001,5 +2000,4 @@ if(HAS3D){
 }else fail3D();
 })();
 </script>
-
 </body></html>

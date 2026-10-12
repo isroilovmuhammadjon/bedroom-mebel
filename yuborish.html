@@ -27,7 +27,7 @@ p{margin:0 0 6px;color:var(--muted)}
   <div id="busy"><div class="spin"></div><h1 data-t="busy">Buyurtma yuborilmoqda…</h1></div>
   <div id="done" hidden><div class="ok">✓</div><h1 data-t="done">Buyurtma yuborildi</h1><p data-t="thanks">Rahmat! Tez orada siz bilan bog‘lanamiz.</p><a class="btn" id="back" href="#" data-t="back">Saytga qaytish</a></div>
   <div id="fail" hidden><h1 data-t="fail">Yuborib bo‘lmadi</h1><p data-t="failp">Internetni tekshirib, qayta urinib ko‘ring yoki bizga Telegramda yozing.</p><a class="btn" id="retry" href="#" data-t="retry">Qayta urinish</a><a class="btn line" id="tg" href="https://t.me/Shaxriyor723" data-t="tg">Telegramda yozish</a></div>
-  <div id="empty" hidden><h1 data-t="empty">Buyurtma topilmadi</h1><a class="btn" href="./" data-t="back">Saytga qaytish</a></div>
+  <div id="empty" hidden><h1 data-t="empty">Buyurtma topilmadi</h1><a class="btn" href="/bedroom-mebel/" data-t="back">Saytga qaytish</a></div>
 </main>
 <script>
 /* Receives the order text in the link (#...) from the Bedroom Mebel site and sends it to the team through the Telegram bot. */
@@ -38,17 +38,20 @@ const T={
  ru:{busy:'Отправляем заказ…',done:'Заказ отправлен',thanks:'Спасибо! Мы скоро свяжемся с вами.',back:'Вернуться на сайт',fail:'Не удалось отправить',failp:'Проверьте интернет и попробуйте снова или напишите нам в Telegram.',retry:'Попробовать снова',tg:'Написать в Telegram',empty:'Заказ не найден',head:'Новый заказ с сайта'},
  en:{busy:'Sending your order…',done:'Order sent',thanks:'Thank you! We will contact you soon.',back:'Back to the website',fail:'Could not send',failp:'Check your connection and try again, or message us on Telegram.',retry:'Try again',tg:'Message on Telegram',empty:'No order found',head:'New order from the website'}};
 const q=new URLSearchParams(location.search.length>1?location.search.slice(1):location.hash.slice(1));
-const lang=T[q.get('l')]?q.get('l'):'uz',t=T[lang];
+/* new links carry the order in the path: /bedroom-mebel/b/<lang>/<base64url> (survives in-app browsers that drop ?query and #hash) */
+const pm=location.pathname.match(/\/b\/(uz|ru|en)\/([A-Za-z0-9_-]+)\/?$/);
+let pmsg=null;if(pm){try{const bin=atob(pm[2].replace(/-/g,'+').replace(/_/g,'/'));pmsg=new TextDecoder().decode(Uint8Array.from(bin,c=>c.charCodeAt(0)));}catch(e){}}
+const lang=T[pm&&pm[1]]?pm[1]:T[q.get('l')]?q.get('l'):'uz',t=T[lang];
 document.documentElement.lang=lang;
 document.querySelectorAll('[data-t]').forEach(e=>e.textContent=t[e.dataset.t]);
-const back=q.get('b');if(back&&/^https:\/\//.test(back))document.getElementById('back').href=back;else document.getElementById('back').href='./';
-const msg=q.get('m');
+const back=q.get('b');if(back&&/^https:\/\//.test(back))document.getElementById('back').href=back;else document.getElementById('back').href='/bedroom-mebel/';
+const msg=pmsg||q.get('m');
 const show=id=>['busy','done','fail','empty'].forEach(k=>document.getElementById(k).hidden=k!==id);
 const key='bm-sent-'+(msg?msg.length+':'+msg.slice(0,40):'');
 function send(){
   show('busy');
   Promise.all(CHATS.map(id=>fetch('https://api.telegram.org/bot'+BOT+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:id,text:'🛏 '+t.head+'\n\n'+msg.slice(0,3900)})}).then(r=>r.json()).catch(()=>({ok:false}))))
-   .then(rs=>{if(rs.some(r=>r.ok)){try{sessionStorage.setItem(key,'1')}catch(e){}show('done');history.replaceState(null,'',location.pathname+'?l='+lang);}else show('fail');});
+   .then(rs=>{if(rs.some(r=>r.ok)){try{sessionStorage.setItem(key,'1')}catch(e){}show('done');history.replaceState(null,'','/bedroom-mebel/b/?l='+lang);}else show('fail');});
 }
 if(!msg)show('empty');
 else{let sent=false;try{sent=sessionStorage.getItem(key)==='1'}catch(e){}if(sent)show('done');else send();}
