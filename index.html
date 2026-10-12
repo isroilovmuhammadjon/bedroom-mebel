@@ -1,3 +1,4 @@
+<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Bedroom Mebel</title>
 <meta name="description" content="Bedroom Mebel — yotoqxona mebellari. 3D xonada ko‘ring, rang va o‘lchamni tanlang, buyurtma bering.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -478,6 +479,10 @@ dialog[open]{animation:dlg .4s cubic-bezier(.2,.8,.2,1)}
 }
 #gToast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);max-width:calc(100% - 32px);background:var(--ink);color:#fff;font:600 15px/1.35 var(--f-body);padding:13px 18px;border-radius:14px;opacity:0;transition:opacity .3s,transform .3s;z-index:80;pointer-events:none;text-align:center}
 #gToast.on{opacity:1;transform:translate(-50%,0)}
+.okbox{background:#fff;border-radius:16px;padding:34px 20px;text-align:center;display:grid;gap:8px;justify-items:center}
+.okbox .okmark{width:60px;height:60px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-size:32px;margin-bottom:6px}
+.okbox h3{font-size:24px}
+.okbox p{color:var(--muted)}
 </style>
 
 <header class="top" id="top">
@@ -984,6 +989,7 @@ const T = {
  send_tg:{uz:'Buyurtma berish',ru:'Оформить заказ',en:'Place order'},
  sending:{uz:'Yuborilmoqda…',ru:'Отправляем…',en:'Sending…'},
  new_order:{uz:'Saytdan yangi buyurtma',ru:'Новый заказ с сайта',en:'New order from the website'},
+ order_sent_h:{uz:'Buyurtmangiz yuborildi',ru:'Ваш заказ отправлен',en:'Your order has been sent'},
  order_sent:{uz:'Yuborildi',ru:'Отправлено',en:'Sent'},
  order_sent_long:{uz:'Rahmat! Buyurtmangiz qabul qilindi, tez orada siz bilan bog‘lanamiz.',ru:'Спасибо! Заказ получен, мы скоро свяжемся с вами.',en:'Thank you! Your order is in. We will contact you soon.'},
  bot_fail:{uz:'Avtomatik yuborilmadi. Tugmani yana bosing — Telegram ochiladi.',ru:'Не удалось отправить автоматически. Нажмите ещё раз — откроется Telegram.',en:'Could not send automatically. Tap again to open Telegram.'},
@@ -1846,22 +1852,25 @@ function renderOrder(){
   box.append(group(t('order_btn'),'',f));
   $('oName').value=keep.n;$('oPhone').value=keep.p;$('oNote').value=keep.c;
   const go=e=>{const n=$('oName').value.trim(),ph=$('oPhone').value.trim();if(!n||ph.replace(/\D/g,'').length<9){e&&e.preventDefault();$('oErr').hidden=false;$('oErr').textContent=t('err_form');(!n?$('oName'):$('oPhone')).focus();return false;}$('oErr').hidden=true;tgSend($('oSend'),buildMessage(n,ph,$('oNote').value.trim()),e);return true;};
+  const pre=()=>{const n=$('oName').value.trim(),ph=$('oPhone').value.trim();if(n&&ph.replace(/\D/g,'').length>=9&&!/github\.io$/i.test(location.hostname)&&BRAND.relay)$('oSend').href=relayURL(buildMessage(n,ph,$('oNote').value.trim()));};['oName','oPhone','oNote'].forEach(id=>$(id).addEventListener('input',pre));
   $('oSend').onclick=go;f.onsubmit=e=>{e.preventDefault();$('oSend').click();};
 }
 function gToast(m){let el=document.getElementById('gToast');if(!el){el=document.createElement('div');el.id='gToast';document.body.append(el);}el.textContent=m;el.classList.add('on');clearTimeout(gToast.t);gToast.t=setTimeout(()=>el.classList.remove('on'),3200);}
+const relayURL=text=>BRAND.relay+'?'+new URLSearchParams({l:LANG,m:text.slice(0,3500)}).toString();
+function orderDone(a){const box=a.closest('form')||a.parentElement;if(!box)return;box.querySelectorAll(':scope > *').forEach(el=>el.hidden=true);let ok=box.querySelector('.okbox');if(!ok){ok=document.createElement('div');ok.className='okbox';box.append(ok);}ok.hidden=false;ok.innerHTML=`<div class="okmark">✓</div><h3>${esc(t('order_sent_h'))}</h3><p>${esc(t('order_sent_long'))}</p>`;ok.scrollIntoView({block:'center',behavior:reduce?'auto':'smooth'});}
 function tgSend(a,text,e){
   const link='https://t.me/'+BRAND.orders+'?text='+encodeURIComponent(text.slice(0,3500));
   if(BRAND.relay&&!/github\.io$/i.test(location.hostname)){/* inside the Claude preview the page may not call Telegram itself: the relay page on our own site sends it */
-    a.href=BRAND.relay+'#'+new URLSearchParams({l:LANG,m:text.slice(0,3500)}).toString();a.textContent='✓ '+t('order_sent');gToast(t('order_sent_long'));return;}
+    a.href=relayURL(text);a.textContent='✓ '+t('order_sent');return;}
   if(BRAND.botToken&&BRAND.chatId&&!a.dataset.manual){/* automatic: the bot delivers the order, the customer stays on the page */
     if(e)e.preventDefault();if(a.dataset.busy)return;a.dataset.busy='1';const label=a.textContent;a.textContent=t('sending');
     const ids=String(BRAND.chatId).split(',').map(x=>x.trim()).filter(Boolean);
     Promise.all(ids.map(id=>fetch('https://api.telegram.org/bot'+BRAND.botToken+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:id,text:'🛏 '+t('new_order')+'\n\n'+text.slice(0,3900)})}).then(r=>r.json())))
-      .then(js=>{if(!js.some(j=>j.ok))throw 0;a.textContent='✓ '+t('order_sent');a.classList.add('done');gToast(t('order_sent_long'));})
-      .catch(()=>{a.href=BRAND.relay+'#'+new URLSearchParams({l:LANG,m:text.slice(0,3500)}).toString();a.dataset.manual='1';a.textContent=t('send_tg');gToast(t('bot_fail'));})
+      .then(js=>{if(!js.some(j=>j.ok))throw 0;orderDone(a);})
+      .catch(()=>{a.href=relayURL(text);a.dataset.manual='1';a.textContent=t('send_tg');gToast(t('bot_fail'));})
       .finally(()=>{delete a.dataset.busy;});
     return;}
-  if(BRAND.relay){a.href=BRAND.relay+'#'+new URLSearchParams({l:LANG,m:text.slice(0,3500)}).toString();gToast(t('order_sent_long'));return;}
+  if(BRAND.relay){a.href=relayURL(text);return;}
   a.href=link;try{navigator.clipboard.writeText(text).catch(()=>{});}catch(err){}gToast(t('sent_hint'));}
 function copy(text,btn,el){const orig=btn.textContent;const ok=()=>{btn.textContent=t('copied');setTimeout(()=>btn.textContent=orig,1800);};const fb=()=>{if(el){if(el.select)el.select();else{const rg=document.createRange();rg.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(rg);}}btn.textContent=t('selected');};try{navigator.clipboard.writeText(text).then(ok,fb);}catch(e){fb();}}
 
@@ -1971,6 +1980,7 @@ $('pd').addEventListener('click',e=>{if(e.target===$('pd'))$('pd').close();});
 function initContact(){$('cPhone').textContent=BRAND.phone;$('footPhone').textContent=BRAND.phone;$('cTg').textContent='t.me/'+BRAND.telegram;$('aTg').href='https://t.me/'+BRAND.telegram;$('cIg').textContent='@'+BRAND.instagram;$('aIg').href='https://www.instagram.com/'+BRAND.instagram+'/';document.querySelector('.tgl').href=BRAND.relay||('https://t.me/'+BRAND.orders);$('cOrd').textContent='@'+BRAND.orders;$('aOrd').href='https://t.me/'+BRAND.orders;
   $('copyPhone').onclick=e=>copy(BRAND.phoneRaw,e.currentTarget,$('cPhone'));
   const go=e=>{const n=$('cName').value.trim(),ph=$('cPhoneIn').value.trim();if(!n||ph.replace(/\D/g,'').length<9){e&&e.preventDefault();$('cErr').hidden=false;$('cErr').textContent=t('err_form');(!n?$('cName'):$('cPhoneIn')).focus();return false;}$('cErr').hidden=true;tgSend($('cSend'),buildMessage(n,ph,$('cMsg').value.trim(),$('cAttach').checked),e);return true;};
+  const pre=()=>{const n=$('cName').value.trim(),ph=$('cPhoneIn').value.trim();if(n&&ph.replace(/\D/g,'').length>=9&&!/github\.io$/i.test(location.hostname)&&BRAND.relay)$('cSend').href=relayURL(buildMessage(n,ph,$('cMsg').value.trim(),$('cAttach').checked));};['cName','cPhoneIn','cMsg','cAttach'].forEach(id=>$(id).addEventListener('input',pre));
   $('cSend').onclick=go;$('cform').onsubmit=e=>{e.preventDefault();$('cSend').click();};}
 
 /* ---------- boot ---------- */
@@ -1991,3 +2001,5 @@ if(HAS3D){
 }else fail3D();
 })();
 </script>
+
+</body></html>

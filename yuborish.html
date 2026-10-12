@@ -37,7 +37,7 @@ const T={
  uz:{busy:'Buyurtma yuborilmoqda…',done:'Buyurtma yuborildi',thanks:'Rahmat! Tez orada siz bilan bog‘lanamiz.',back:'Saytga qaytish',fail:'Yuborib bo‘lmadi',failp:'Internetni tekshirib, qayta urinib ko‘ring yoki bizga Telegramda yozing.',retry:'Qayta urinish',tg:'Telegramda yozish',empty:'Buyurtma topilmadi',head:'Saytdan yangi buyurtma'},
  ru:{busy:'Отправляем заказ…',done:'Заказ отправлен',thanks:'Спасибо! Мы скоро свяжемся с вами.',back:'Вернуться на сайт',fail:'Не удалось отправить',failp:'Проверьте интернет и попробуйте снова или напишите нам в Telegram.',retry:'Попробовать снова',tg:'Написать в Telegram',empty:'Заказ не найден',head:'Новый заказ с сайта'},
  en:{busy:'Sending your order…',done:'Order sent',thanks:'Thank you! We will contact you soon.',back:'Back to the website',fail:'Could not send',failp:'Check your connection and try again, or message us on Telegram.',retry:'Try again',tg:'Message on Telegram',empty:'No order found',head:'New order from the website'}};
-const q=new URLSearchParams(location.hash.slice(1));
+const q=new URLSearchParams(location.search.length>1?location.search.slice(1):location.hash.slice(1));
 const lang=T[q.get('l')]?q.get('l'):'uz',t=T[lang];
 document.documentElement.lang=lang;
 document.querySelectorAll('[data-t]').forEach(e=>e.textContent=t[e.dataset.t]);
@@ -48,7 +48,7 @@ const key='bm-sent-'+(msg?msg.length+':'+msg.slice(0,40):'');
 function send(){
   show('busy');
   Promise.all(CHATS.map(id=>fetch('https://api.telegram.org/bot'+BOT+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:id,text:'🛏 '+t.head+'\n\n'+msg.slice(0,3900)})}).then(r=>r.json()).catch(()=>({ok:false}))))
-   .then(rs=>{if(rs.some(r=>r.ok)){try{sessionStorage.setItem(key,'1')}catch(e){}show('done');history.replaceState(null,'',location.pathname+'#l='+lang);}else show('fail');});
+   .then(rs=>{if(rs.some(r=>r.ok)){try{sessionStorage.setItem(key,'1')}catch(e){}show('done');history.replaceState(null,'',location.pathname+'?l='+lang);}else show('fail');});
 }
 if(!msg)show('empty');
 else{let sent=false;try{sent=sessionStorage.getItem(key)==='1'}catch(e){}if(sent)show('done');else send();}
