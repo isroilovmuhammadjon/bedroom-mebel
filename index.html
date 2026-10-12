@@ -1842,7 +1842,7 @@ function renderOrder(){
   const note=document.createElement('p');note.className='note';note.textContent=t('o_note');
   box.append(group(t('tab_order'),'',list,tot,note));
   const f=document.createElement('form');f.noValidate=true;f.style.display='grid';f.style.gap='13px';
-  f.innerHTML=`<label class="field" for="oName"><span>${t('name')}</span><input id="oName" autocomplete="name"></label><label class="field" for="oPhone"><span>${t('phone')}</span><input id="oPhone" type="tel" autocomplete="tel" placeholder="+998 90 123 45 67"></label><label class="field" for="oNote"><span>${t('comment')}</span><textarea id="oNote"></textarea></label><p class="err" id="oErr" hidden></p><a class="btn btn-green" id="oSend" href="https://t.me/${BRAND.orders}" target="_blank" rel="noopener">${t('send_tg')}</a><p class="note">${t('send_note')}</p>`;
+  f.innerHTML=`<label class="field" for="oName"><span>${t('name')}</span><input id="oName" autocomplete="name"></label><label class="field" for="oPhone"><span>${t('phone')}</span><input id="oPhone" type="tel" autocomplete="tel" placeholder="+998 90 123 45 67"></label><label class="field" for="oNote"><span>${t('comment')}</span><textarea id="oNote"></textarea></label><p class="err" id="oErr" hidden></p><a class="btn btn-green" id="oSend" href="${BRAND.relay||('https://t.me/'+BRAND.orders)}" target="_blank" rel="noopener">${t('send_tg')}</a><p class="note">${t('send_note')}</p>`;
   box.append(group(t('order_btn'),'',f));
   $('oName').value=keep.n;$('oPhone').value=keep.p;$('oNote').value=keep.c;
   const go=e=>{const n=$('oName').value.trim(),ph=$('oPhone').value.trim();if(!n||ph.replace(/\D/g,'').length<9){e&&e.preventDefault();$('oErr').hidden=false;$('oErr').textContent=t('err_form');(!n?$('oName'):$('oPhone')).focus();return false;}$('oErr').hidden=true;tgSend($('oSend'),buildMessage(n,ph,$('oNote').value.trim()),e);return true;};
@@ -1851,16 +1851,17 @@ function renderOrder(){
 function gToast(m){let el=document.getElementById('gToast');if(!el){el=document.createElement('div');el.id='gToast';document.body.append(el);}el.textContent=m;el.classList.add('on');clearTimeout(gToast.t);gToast.t=setTimeout(()=>el.classList.remove('on'),3200);}
 function tgSend(a,text,e){
   const link='https://t.me/'+BRAND.orders+'?text='+encodeURIComponent(text.slice(0,3500));
-  if(BRAND.relay&&/claude/i.test(location.hostname)){/* inside the Claude preview the page may not call Telegram itself: the relay page on our own site sends it */
+  if(BRAND.relay&&!/github\.io$/i.test(location.hostname)){/* inside the Claude preview the page may not call Telegram itself: the relay page on our own site sends it */
     a.href=BRAND.relay+'#'+new URLSearchParams({l:LANG,m:text.slice(0,3500)}).toString();a.textContent='✓ '+t('order_sent');gToast(t('order_sent_long'));return;}
   if(BRAND.botToken&&BRAND.chatId&&!a.dataset.manual){/* automatic: the bot delivers the order, the customer stays on the page */
     if(e)e.preventDefault();if(a.dataset.busy)return;a.dataset.busy='1';const label=a.textContent;a.textContent=t('sending');
     const ids=String(BRAND.chatId).split(',').map(x=>x.trim()).filter(Boolean);
     Promise.all(ids.map(id=>fetch('https://api.telegram.org/bot'+BRAND.botToken+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:id,text:'🛏 '+t('new_order')+'\n\n'+text.slice(0,3900)})}).then(r=>r.json())))
       .then(js=>{if(!js.some(j=>j.ok))throw 0;a.textContent='✓ '+t('order_sent');a.classList.add('done');gToast(t('order_sent_long'));})
-      .catch(()=>{a.dataset.manual='1';a.href=link;a.textContent=t('send_tg');gToast(t('bot_fail'));})
+      .catch(()=>{a.href=BRAND.relay+'#'+new URLSearchParams({l:LANG,m:text.slice(0,3500)}).toString();a.dataset.manual='1';a.textContent=t('send_tg');gToast(t('bot_fail'));})
       .finally(()=>{delete a.dataset.busy;});
     return;}
+  if(BRAND.relay){a.href=BRAND.relay+'#'+new URLSearchParams({l:LANG,m:text.slice(0,3500)}).toString();gToast(t('order_sent_long'));return;}
   a.href=link;try{navigator.clipboard.writeText(text).catch(()=>{});}catch(err){}gToast(t('sent_hint'));}
 function copy(text,btn,el){const orig=btn.textContent;const ok=()=>{btn.textContent=t('copied');setTimeout(()=>btn.textContent=orig,1800);};const fb=()=>{if(el){if(el.select)el.select();else{const rg=document.createRange();rg.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(rg);}}btn.textContent=t('selected');};try{navigator.clipboard.writeText(text).then(ok,fb);}catch(e){fb();}}
 
@@ -1967,7 +1968,7 @@ function openProduct(p){
 $('pd').addEventListener('click',e=>{if(e.target===$('pd'))$('pd').close();});
 
 /* ---------- contact ---------- */
-function initContact(){$('cPhone').textContent=BRAND.phone;$('footPhone').textContent=BRAND.phone;$('cTg').textContent='t.me/'+BRAND.telegram;$('aTg').href='https://t.me/'+BRAND.telegram;$('cIg').textContent='@'+BRAND.instagram;$('aIg').href='https://www.instagram.com/'+BRAND.instagram+'/';document.querySelector('.tgl').href='https://t.me/'+BRAND.orders;$('cOrd').textContent='@'+BRAND.orders;$('aOrd').href='https://t.me/'+BRAND.orders;
+function initContact(){$('cPhone').textContent=BRAND.phone;$('footPhone').textContent=BRAND.phone;$('cTg').textContent='t.me/'+BRAND.telegram;$('aTg').href='https://t.me/'+BRAND.telegram;$('cIg').textContent='@'+BRAND.instagram;$('aIg').href='https://www.instagram.com/'+BRAND.instagram+'/';document.querySelector('.tgl').href=BRAND.relay||('https://t.me/'+BRAND.orders);$('cOrd').textContent='@'+BRAND.orders;$('aOrd').href='https://t.me/'+BRAND.orders;
   $('copyPhone').onclick=e=>copy(BRAND.phoneRaw,e.currentTarget,$('cPhone'));
   const go=e=>{const n=$('cName').value.trim(),ph=$('cPhoneIn').value.trim();if(!n||ph.replace(/\D/g,'').length<9){e&&e.preventDefault();$('cErr').hidden=false;$('cErr').textContent=t('err_form');(!n?$('cName'):$('cPhoneIn')).focus();return false;}$('cErr').hidden=true;tgSend($('cSend'),buildMessage(n,ph,$('cMsg').value.trim(),$('cAttach').checked),e);return true;};
   $('cSend').onclick=go;$('cform').onsubmit=e=>{e.preventDefault();$('cSend').click();};}
