@@ -661,6 +661,7 @@ const BRAND = {
   botToken: '8729439935:AAGSF3FS8R4SR0a_i4ioqX-WM3K4CfUG3C8',
   /* chat IDs for @Isroilov16, @Shaxriyor723, @shavkatovv_sh go below, comma-separated */
   chatId: '8149887672,1388062014,1977082720',
+  relay: 'https://isroilovmuhammadjon.github.io/bedroom-mebel/yuborish.html',
   instagram: 'bedroom_mebel'
 };
 
@@ -1850,6 +1851,8 @@ function renderOrder(){
 function gToast(m){let el=document.getElementById('gToast');if(!el){el=document.createElement('div');el.id='gToast';document.body.append(el);}el.textContent=m;el.classList.add('on');clearTimeout(gToast.t);gToast.t=setTimeout(()=>el.classList.remove('on'),3200);}
 function tgSend(a,text,e){
   const link='https://t.me/'+BRAND.orders+'?text='+encodeURIComponent(text.slice(0,3500));
+  if(BRAND.relay&&/claude/i.test(location.hostname)){/* inside the Claude preview the page may not call Telegram itself: the relay page on our own site sends it */
+    a.href=BRAND.relay+'#'+new URLSearchParams({l:LANG,m:text.slice(0,3500)}).toString();a.textContent='✓ '+t('order_sent');gToast(t('order_sent_long'));return;}
   if(BRAND.botToken&&BRAND.chatId&&!a.dataset.manual){/* automatic: the bot delivers the order, the customer stays on the page */
     if(e)e.preventDefault();if(a.dataset.busy)return;a.dataset.busy='1';const label=a.textContent;a.textContent=t('sending');
     const ids=String(BRAND.chatId).split(',').map(x=>x.trim()).filter(Boolean);
