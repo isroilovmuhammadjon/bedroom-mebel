@@ -31,8 +31,7 @@ p{margin:0 0 6px;color:var(--muted)}
 </main>
 <script>
 /* Receives the order text in the link (#...) from the Bedroom Mebel site and sends it to the team through the Telegram bot. */
-const BOT='8729439935:AAGSF3FS8R4SR0a_i4ioqX-WM3K4CfUG3C8';
-const CHATS=['8149887672','1388062014','1977082720'];
+const API='https://161-35-209-77.sslip.io/buyurtma';
 const T={
  uz:{busy:'Buyurtma yuborilmoqda…',done:'Buyurtma yuborildi',thanks:'Rahmat! Tez orada siz bilan bog‘lanamiz.',back:'Saytga qaytish',fail:'Yuborib bo‘lmadi',failp:'Internetni tekshirib, qayta urinib ko‘ring yoki bizga Telegramda yozing.',retry:'Qayta urinish',tg:'Telegramda yozish',empty:'Buyurtma topilmadi',head:'Saytdan yangi buyurtma'},
  ru:{busy:'Отправляем заказ…',done:'Заказ отправлен',thanks:'Спасибо! Мы скоро свяжемся с вами.',back:'Вернуться на сайт',fail:'Не удалось отправить',failp:'Проверьте интернет и попробуйте снова или напишите нам в Telegram.',retry:'Попробовать снова',tg:'Написать в Telegram',empty:'Заказ не найден',head:'Новый заказ с сайта'},
@@ -50,8 +49,8 @@ const show=id=>['busy','done','fail','empty'].forEach(k=>document.getElementById
 const key='bm-sent-'+(msg?msg.length+':'+msg.slice(0,40):'');
 function send(){
   show('busy');
-  Promise.all(CHATS.map(id=>fetch('https://api.telegram.org/bot'+BOT+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:id,text:'🛏 '+t.head+'\n\n'+msg.slice(0,3900)})}).then(r=>r.json()).catch(()=>({ok:false}))))
-   .then(rs=>{if(rs.some(r=>r.ok)){try{sessionStorage.setItem(key,'1')}catch(e){}show('done');history.replaceState(null,'','/bedroom-mebel/b/?l='+lang);}else show('fail');});
+  fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({m:msg.slice(0,3900),l:lang})}).then(r=>r.json()).catch(()=>({ok:false}))
+   .then(rs=>{if(rs.ok){try{sessionStorage.setItem(key,'1')}catch(e){}show('done');history.replaceState(null,'','/bedroom-mebel/b/?l='+lang);}else show('fail');});
 }
 if(!msg)show('empty');
 else{let sent=false;try{sent=sessionStorage.getItem(key)==='1'}catch(e){}if(sent)show('done');else send();}

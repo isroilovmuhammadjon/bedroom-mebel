@@ -662,9 +662,8 @@ const BRAND = {
      botToken: from @BotFather (/newbot). chatId: the number @userinfobot shows to Shaxriyor
      (he must press Start in the new bot once). Several people: '111,222'. A group: add the bot to it and use the group id (starts with -).
      Works on your own hosting; leave empty to switch off. */
-  botToken: '8729439935:AAGSF3FS8R4SR0a_i4ioqX-WM3K4CfUG3C8',
+  api: 'https://161-35-209-77.sslip.io/buyurtma',   /* orders go to our server relay; the bot token lives only on the server */
   /* chat IDs for @Isroilov16, @Shaxriyor723, @shavkatovv_sh go below, comma-separated */
-  chatId: '8149887672,1388062014,1977082720',
   relay: 'https://isroilovmuhammadjon.github.io/bedroom-mebel/b/',
   instagram: 'bedroom_mebel'
 };
@@ -1861,11 +1860,10 @@ function tgSend(a,text,e){
   const link='https://t.me/'+BRAND.orders+'?text='+encodeURIComponent(text.slice(0,3500));
   if(BRAND.relay&&!/github\.io$/i.test(location.hostname)){/* inside the Claude preview the page may not call Telegram itself: the relay page on our own site sends it */
     a.href=relayURL(text);a.textContent='✓ '+t('order_sent');return;}
-  if(BRAND.botToken&&BRAND.chatId&&!a.dataset.manual){/* automatic: the bot delivers the order, the customer stays on the page */
+  if(BRAND.api&&!a.dataset.manual){/* automatic: the bot delivers the order, the customer stays on the page */
     if(e)e.preventDefault();if(a.dataset.busy)return;a.dataset.busy='1';const label=a.textContent;a.textContent=t('sending');
-    const ids=String(BRAND.chatId).split(',').map(x=>x.trim()).filter(Boolean);
-    Promise.all(ids.map(id=>fetch('https://api.telegram.org/bot'+BRAND.botToken+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:id,text:'🛏 '+t('new_order')+'\n\n'+text.slice(0,3900)})}).then(r=>r.json())))
-      .then(js=>{if(!js.some(j=>j.ok))throw 0;orderDone(a);})
+    fetch(BRAND.api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({m:text.slice(0,3900),l:LANG})}).then(r=>r.json())
+      .then(js=>{if(!js.ok)throw 0;orderDone(a);})
       .catch(()=>{a.href=relayURL(text);a.dataset.manual='1';a.textContent=t('send_tg');gToast(t('bot_fail'));})
       .finally(()=>{delete a.dataset.busy;});
     return;}
