@@ -21,6 +21,8 @@ const BRAND = {
   phone: '+998 99 723 77 07',   // shown on the site
   phoneRaw: '+998997237707',    // copied by the "Copy" button
   telegram: 'bedroom_mebel',    // t.me/bedroom_mebel
+  orders: 'Shaxriyor723',       // orders and price questions go to t.me/<this>
+  api: 'https://…/buyurtma',    // order server (sends orders to Telegram through the bot)
   instagram: 'bedroom_mebel'
 };
 ```
@@ -89,11 +91,10 @@ The 3D model is drawn at exactly these sizes, so a 90 cm bed looks narrow and a 
 
 **Options** with a `flag` (for example `lift`, `mirror`, `led`, `drawers`) also switch that feature on the 3D model when the customer ticks them. Options without a flag only add to the price.
 
-## 5. Real product photos (optional)
+## 5. Photos
 
-Add `photo:'images/name.jpg'` to a product. The catalog card then shows the photo, while the 3D room keeps using the 3D model. Put the images in an `images` folder next to `index.html` when you host the site.
-
-Note: photos from other websites will not load inside the Claude preview. They work once the site is on your own hosting.
+- **"Rasmlar" (our work) section:** the list is `WORKS` in `index.html`. Each photo is `img/<name>.jpg` (full size, opens in the viewer) plus a small copy `img/thumb/<name>.webp` (600 px wide, shown on the cards). When you add a photo, add both files. Any image tool can make the WebP copy (for example squoosh.app, width 600, quality 75–80).
+- **Catalog photo (optional):** add `photo:'img/name.jpg'` to a product. The catalog card then shows the photo, while the 3D room keeps using the 3D model.
 
 ## 6. Putting the site on the internet
 
@@ -104,17 +105,27 @@ Note: photos from other websites will not load inside the Claude preview. They w
 3. Upload `index.html` (and the `images` folder, if you use photos).
 4. Point the domain to the hosting, following the host's instructions.
 
-The site needs no server, database or build step. It loads the 3D engine and fonts from public CDNs.
+The site needs no database or build step. The 3D engine (three.js) is in the `vendor/three` folder, so it loads from your own hosting; only the fonts come from Google Fonts.
+
+The site now lives at `https://isroilovmuhammadjon.github.io/bedroom-mebel/`. If you move it to your own domain, change that address in the `<head>` of `index.html` (canonical, `og:url`, `og:image` and the JSON-LD block) and in `sitemap.xml`.
+
+**Google:** add the site in Google Search Console (search.google.com/search-console) and submit `sitemap.xml`. Also create a free Google Business Profile with the shop's address and hours, so the shop shows up on Google Maps.
 
 ## 7. How orders work
 
-When a customer presses "Prepare order message", the site builds a text containing:
+The customer fills in name and phone and presses the send button. The site builds a text containing:
 - their name and phone
 - every selected item with size, colour, fabric, options and price
 - the total
 - their room settings
 
-They copy it and send it to the shop on Telegram. The site does not send anything by itself.
+The site sends this text to the order server (`BRAND.api`), and the server's Telegram bot posts it to the shop's chat. The customer sees "Buyurtmangiz yuborildi" and stays on the page.
+
+If the server cannot be reached (no internet, server down), the button changes: the next tap opens the shop's Telegram chat (`BRAND.orders`) with the text filled in and also copied, so the customer can still send it by hand.
+
+The furniture that is already in the room on a first visit is only an example. The order counter stays empty until the customer chooses or changes something, and the order tab says that the room is a sample.
+
+`yuborish.html` and `404.html` are the same file. They only handle order links made by older versions of the site; any other wrong address shows a normal "page not found".
 
 ## 8. What the customer can do in the 3D room
 

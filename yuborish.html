@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Bedroom Mebel — buyurtma</title>
+<title>Bedroom Mebel</title>
+<link rel="icon" href="/bedroom-mebel/favicon.png" type="image/png">
 <meta name="robots" content="noindex">
 <style>
 :root{--deep:#12301F;--green:#1E5B3E;--gold:#CBA265;--cream:#F4EFE4;--ink:#12201A;--muted:#4C5B52}
@@ -28,14 +29,17 @@ p{margin:0 0 6px;color:var(--muted)}
   <div id="done" hidden><div class="ok">✓</div><h1 data-t="done">Buyurtma yuborildi</h1><p data-t="thanks">Rahmat! Tez orada siz bilan bog‘lanamiz.</p><a class="btn" id="back" href="#" data-t="back">Saytga qaytish</a></div>
   <div id="fail" hidden><h1 data-t="fail">Yuborib bo‘lmadi</h1><p data-t="failp">Internetni tekshirib, qayta urinib ko‘ring yoki bizga Telegramda yozing.</p><a class="btn" id="retry" href="#" data-t="retry">Qayta urinish</a><a class="btn line" id="tg" href="https://t.me/Shaxriyor723" data-t="tg">Telegramda yozish</a></div>
   <div id="empty" hidden><h1 data-t="empty">Buyurtma topilmadi</h1><a class="btn" href="/bedroom-mebel/" data-t="back">Saytga qaytish</a></div>
+  <div id="nf" hidden><h1 data-t="nf">Sahifa topilmadi</h1><p data-t="nfp">Bunday sahifa yo‘q. Bosh sahifaga o‘ting.</p><a class="btn" href="/bedroom-mebel/" data-t="home">Bosh sahifa</a></div>
 </main>
 <script>
-/* Receives the order text in the link (#...) from the Bedroom Mebel site and sends it to the team through the Telegram bot. */
+/* Kept for order links made by older versions of the site (the site now sends orders directly).
+   Any other unknown address shows a normal "page not found".
+   Receives the order text in the link (#...) from the Bedroom Mebel site and sends it to the team through the Telegram bot. */
 const API='https://161-35-209-77.sslip.io/buyurtma';
 const T={
- uz:{busy:'Buyurtma yuborilmoqda…',done:'Buyurtma yuborildi',thanks:'Rahmat! Tez orada siz bilan bog‘lanamiz.',back:'Saytga qaytish',fail:'Yuborib bo‘lmadi',failp:'Internetni tekshirib, qayta urinib ko‘ring yoki bizga Telegramda yozing.',retry:'Qayta urinish',tg:'Telegramda yozish',empty:'Buyurtma topilmadi',head:'Saytdan yangi buyurtma'},
- ru:{busy:'Отправляем заказ…',done:'Заказ отправлен',thanks:'Спасибо! Мы скоро свяжемся с вами.',back:'Вернуться на сайт',fail:'Не удалось отправить',failp:'Проверьте интернет и попробуйте снова или напишите нам в Telegram.',retry:'Попробовать снова',tg:'Написать в Telegram',empty:'Заказ не найден',head:'Новый заказ с сайта'},
- en:{busy:'Sending your order…',done:'Order sent',thanks:'Thank you! We will contact you soon.',back:'Back to the website',fail:'Could not send',failp:'Check your connection and try again, or message us on Telegram.',retry:'Try again',tg:'Message on Telegram',empty:'No order found',head:'New order from the website'}};
+ uz:{busy:'Buyurtma yuborilmoqda…',done:'Buyurtma yuborildi',thanks:'Rahmat! Tez orada siz bilan bog‘lanamiz.',back:'Saytga qaytish',fail:'Yuborib bo‘lmadi',failp:'Internetni tekshirib, qayta urinib ko‘ring yoki bizga Telegramda yozing.',retry:'Qayta urinish',tg:'Telegramda yozish',empty:'Buyurtma topilmadi',nf:'Sahifa topilmadi',nfp:'Bunday sahifa yo‘q. Bosh sahifaga o‘ting.',home:'Bosh sahifa',head:'Saytdan yangi buyurtma'},
+ ru:{busy:'Отправляем заказ…',done:'Заказ отправлен',thanks:'Спасибо! Мы скоро свяжемся с вами.',back:'Вернуться на сайт',fail:'Не удалось отправить',failp:'Проверьте интернет и попробуйте снова или напишите нам в Telegram.',retry:'Попробовать снова',tg:'Написать в Telegram',empty:'Заказ не найден',nf:'Страница не найдена',nfp:'Такой страницы нет. Перейдите на главную.',home:'На главную',head:'Новый заказ с сайта'},
+ en:{busy:'Sending your order…',done:'Order sent',thanks:'Thank you! We will contact you soon.',back:'Back to the website',fail:'Could not send',failp:'Check your connection and try again, or message us on Telegram.',retry:'Try again',tg:'Message on Telegram',empty:'No order found',nf:'Page not found',nfp:'This page does not exist. Go to the home page.',home:'Home page',head:'New order from the website'}};
 const q=new URLSearchParams(location.search.length>1?location.search.slice(1):location.hash.slice(1));
 /* new links carry the order in the path: /bedroom-mebel/b/<lang>/<base64url> (survives in-app browsers that drop ?query and #hash) */
 const pm=location.pathname.match(/\/b\/(uz|ru|en)\/([A-Za-z0-9_-]+)\/?$/);
@@ -43,16 +47,19 @@ let pmsg=null;if(pm){try{const bin=atob(pm[2].replace(/-/g,'+').replace(/_/g,'/'
 const lang=T[pm&&pm[1]]?pm[1]:T[q.get('l')]?q.get('l'):'uz',t=T[lang];
 document.documentElement.lang=lang;
 document.querySelectorAll('[data-t]').forEach(e=>e.textContent=t[e.dataset.t]);
-const back=q.get('b');if(back&&/^https:\/\//.test(back))document.getElementById('back').href=back;else document.getElementById('back').href='/bedroom-mebel/';
+/* only links back to this same site are allowed (no redirects to other websites) */
+let backURL='/bedroom-mebel/';try{const b=q.get('b');if(b){const u=new URL(b,location.href);if(u.origin===location.origin)backURL=u.pathname+u.search+u.hash;}}catch(e){}
+document.getElementById('back').href=backURL;
 const msg=pmsg||q.get('m');
-const show=id=>['busy','done','fail','empty'].forEach(k=>document.getElementById(k).hidden=k!==id);
+const show=id=>['busy','done','fail','empty','nf'].forEach(k=>document.getElementById(k).hidden=k!==id);
 const key='bm-sent-'+(msg?msg.length+':'+msg.slice(0,40):'');
 function send(){
   show('busy');
   fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({m:msg.slice(0,3900),l:lang})}).then(r=>r.json()).catch(()=>({ok:false}))
    .then(rs=>{if(rs.ok){try{sessionStorage.setItem(key,'1')}catch(e){}show('done');history.replaceState(null,'','/bedroom-mebel/b/?l='+lang);}else show('fail');});
 }
-if(!msg)show('empty');
+const isRelay=!!pm||/\/b\/?$/.test(location.pathname)||/yuborish\.html$/.test(location.pathname);
+if(!msg)show(isRelay?'empty':'nf');
 else{let sent=false;try{sent=sessionStorage.getItem(key)==='1'}catch(e){}if(sent)show('done');else send();}
 document.getElementById('retry').onclick=e=>{e.preventDefault();send();};
 </script>
